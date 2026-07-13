@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Analyzer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    @keyframes popIn {
+      0%   { transform: scale(0.7); opacity: 0; }
+      70%  { transform: scale(1.1); }
+      100% { transform: scale(1);   opacity: 1; }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0);   }
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0f1117;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 16px;
+    }
+
+    .card {
+  background: #1a1d27;
+  border-radius: 20px;
+  padding: 30px 26px;
+  width: 100%;
+  max-width: 750px;
+  border: 1px solid #2a2d3e;
+
+  box-shadow: 0 0 20px rgba(0,230,118,0.15);
+  animation: floatCard 4s ease-in-out infinite;
+}
+@keyframes floatCard {
+  0%,100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+ @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,900&display=swap');
+
+.title {
+  font-family: 'Playfair Display', serif;
+  font-size: 50px;
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+  background: linear-gradient(90deg, #7986cb, #00e676, #7986cb);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s linear infinite;
+  
+}
+@keyframes shimmer {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+    .subtitle {
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 24px;
+    }
+
+    .pw-wrap { position: relative; margin-bottom: 22px; }
+
+    .pw-input {
+      width: 100%;
+      padding: 13px 46px 13px 14px;
+      background: #12141e;
+      border: 1.5px solid #2a2d3e;
+      border-radius: 12px;
+      font-size: 15px;
+      color: #e0e0ff;
+      font-family: monospace;
+      outline: none;
+      transition: all 0.4s ease;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      
+    }
+
+    .pw-input::placeholder { color: #444; }
+    .pw-input:focus {
+  border-color: #00e676;
+  box-shadow:
+      0 0 15px rgba(0,230,118,0.4),
+      0 0 30px rgba(0,230,118,0.2);
+}
+
+    .eye-btn {
+      position: absolute;
+      right: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .shield {
+      text-align: center;
+      font-size: 56px;
+      margin-bottom: 10px;
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: filter 0.4s;
+    }
+
+    .strength-label {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      min-height: 30px;
+      margin-bottom: 14px;
+      transition: color 0.4s;
+    }
+
+    .bars {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 22px;
+    }
+
+    .bar-seg {
+      flex: 1;
+      height: 9px;
+      border-radius: 5px;
+      background: #2a2d3e;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 5px;
+      transition: width 0.5s cubic-bezier(.4,0,.2,1),
+                  background 0.4s, box-shadow 0.4s;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .stat {
+  background: #12141e;
+  border-radius: 14px;
+  padding: 14px 8px;
+  text-align: center;
+  border: 1px solid #2a2d3e;
+
+  transition: 0.4s;
+}
+
+.stat:hover {
+  transform: translateY(-6px) scale(1.05);
+
+  box-shadow:
+    0 0 15px rgba(0,230,118,0.5),
+    0 0 30px rgba(0,230,118,0.2);
+}
+
+    .stat .snum {
+      font-size: 22px;
+      font-weight: 700;
+      color: #e0e0ff;
+    }
+
+    .stat .slbl {
+      font-size: 11px;
+      color: #555;
+      margin-top: 3px;
+    }
+
+    .checks { margin-bottom: 18px; }
+
+    .chk {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 0;
+      border-bottom: 1px solid #1e2130;
+      font-size: 13px;
+      opacity: 0;
+      animation: slideIn 0.3s ease forwards;
+    }
+
+    .chk:last-child { border-bottom: none; }
+    .chk.pass { color: #81c784; }
+    .chk.fail { color: #ef5350; }
+    .chk-icon { font-size: 15px; flex-shrink: 0; }
+
+    .tips {
+  background: #12141e;
+  border: 1px solid #00e676;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: none;
+
+  box-shadow: 0 0 15px rgba(0,230,118,0.2);
+}
+    .tips-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #7986cb;
+      margin-bottom: 8px;
+    }
+
+    .tips ul {
+      padding-left: 18px;
+      font-size: 13px;
+      color: #aaa;
+      line-height: 1.9;
+      margin: 0;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 20px 0;
+      color: #444;
+      font-size: 14px;
+    }
+
+    .empty .lock { font-size: 32px; display: block; margin-bottom: 8px; }
+
+    .pop {
+      animation: popIn 0.4s ease forwards;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <div class="title">🔐 PASSWORD ANALYZER</div>
+<div class="subtitle"></div>
+
+  <div class="pw-wrap">
+    <input
+      class="pw-input"
+      type="password"
+      id="pw"
+      placeholder="Enter your password here..."
+      oninput="analyze()"
+    />
+    <button class="eye-btn" onclick="toggleEye()" id="eyeBtn" title="Show/hide">👁</button>
+  </div>
+
+  <div class="shield" id="shield">🔒</div>
+  <div class="strength-label" id="slabel"></div>
+
+  <div class="bars">
+    <div class="bar-seg"><div class="bar-fill" id="b1"></div></div>
+    <div class="bar-seg"><div class="bar-fill" id="b2"></div></div>
+    <div class="bar-seg"><div class="bar-fill" id="b3"></div></div>
+    <div class="bar-seg"><div class="bar-fill" id="b4"></div></div>
+    <div class="bar-seg"><div class="bar-fill" id="b5"></div></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="snum" id="slen">0</div>
+      <div class="slbl">Length</div>
+    </div>
+    <div class="stat">
+      <div class="snum" id="supp">0</div>
+      <div class="slbl">Uppercase</div>
+    </div>
+    <div class="stat">
+      <div class="snum" id="snum">0</div>
+      <div class="slbl">Numbers</div>
+    </div>
+    <div class="stat">
+      <div class="snum" id="ssym">0</div>
+      <div class="slbl">Symbols</div>
+    </div>
+  </div>
+
+  <div class="checks" id="checks">
+    <div class="empty">
+      <span class="lock">🛡️</span>
+      Type a password above to begin analysis
+    </div>
+  </div>
+
+  <div class="tips" id="tips">
+    <div class="tips-title">💡 Recommendations</div>
+    <ul id="tipslist"></ul>
+  </div>
+
+</div>
+
+<script>
+  const COMMON = new Set([
+    "password","123456","12345678","qwerty","abc123","monkey",
+    "letmein","dragon","iloveyou","master","sunshine","shadow",
+    "123123","654321","superman","admin","welcome","pass",
+    "trustno1","football","michael","password1","111111","000000"
+  ]);
+
+  const LEVELS = [
+    { label: "Very Weak",   color: "#ef5350", segments: 1, shield: "💀", glow: "rgba(239,83,80,0.45)"   },
+    { label: "Weak",        color: "#ff7043", segments: 2, shield: "🔓", glow: "rgba(255,112,67,0.45)"  },
+    { label: "Fair",        color: "#ffd740", segments: 3, shield: "🛡️", glow: "rgba(255,215,64,0.4)"   },
+    { label: "Strong",      color: "#66bb6a", segments: 4, shield: "🔐", glow: "rgba(102,187,106,0.45)" },
+    { label: "Very Strong", color: "#00e676", segments: 5, shield: "✅", glow: "rgba(0,230,118,0.5)"    },
+  ];
+
+  function toggleEye() {
+    const inp = document.getElementById('pw');
+    const btn = document.getElementById('eyeBtn');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+  }
+
+  function pop(el) {
+    el.classList.remove('pop');
+    void el.offsetWidth;
+    el.classList.add('pop');
+  }
+
+  function analyze() {
+    const pw = document.getElementById('pw').value;
+    if (!pw) { reset(); return; }
+
+    const upper  = (pw.match(/[A-Z]/g) || []).length;
+    const lower  = (pw.match(/[a-z]/g) || []).length;
+    const nums   = (pw.match(/[0-9]/g) || []).length;
+    const syms   = (pw.match(/[^A-Za-z0-9]/g) || []).length;
+    const common = COMMON.has(pw.toLowerCase());
+    const repeat = /(.)\1{2,}/.test(pw);
+    const seq    = /(012|123|234|345|456|567|678|789|abc|bcd|cde)/i.test(pw);
+
+    let score = 0;
+    if (pw.length >= 8)  score++;
+    if (pw.length >= 12) score++;
+    if (pw.length >= 16) score++;
+    if (upper > 0) score++;
+    if (lower > 0) score++;
+    if (nums  > 0) score++;
+    if (syms  > 0) score++;
+    if (!common)   score++;
+    if (!repeat)   score++;
+    if (!seq)      score++;
+
+    const lvlIdx = score <= 2 ? 0 : score <= 4 ? 1 : score <= 6 ? 2 : score <= 8 ? 3 : 4;
+    const lvl = LEVELS[lvlIdx];
+
+    const shieldEl = document.getElementById('shield');
+    shieldEl.textContent = lvl.shield;
+    shieldEl.style.filter = `drop-shadow(0 0 14px ${lvl.glow})`;
+    pop(shieldEl);
+
+    const labelEl = document.getElementById('slabel');
+    labelEl.textContent = lvl.label;
+    labelEl.style.color = lvl.color;
+    pop(labelEl);
+
+    for (let i = 1; i <= 5; i++) {
+      const fill = document.getElementById('b' + i);
+      if (i <= lvl.segments) {
+        fill.style.width      = '100%';
+        fill.style.background = lvl.color;
+        fill.style.boxShadow  = `0 0 8px ${lvl.glow}`;
+      } else {
+        fill.style.width     = '0%';
+        fill.style.boxShadow = 'none';
+      }
+    }
+
+    const inp = document.getElementById('pw');
+    inp.style.borderColor = lvl.color;
+    inp.style.boxShadow   = `0 0 0 3px ${lvl.glow}`;
+
+    [['slen', pw.length], ['supp', upper], ['snum', nums], ['ssym', syms]].forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      el.textContent = val;
+      pop(el);
+    });
+
+    const checkList = [
+      [pw.length >= 8,  "At least 8 characters"],
+      [pw.length >= 12, "At least 12 characters (recommended)"],
+      [upper > 0,       "Has uppercase letters (A-Z)"],
+      [lower > 0,       "Has lowercase letters (a-z)"],
+      [nums  > 0,       "Has numbers (0-9)"],
+      [syms  > 0,       "Has special characters (!@#$...)"],
+      [!common,         "Not a commonly used password"],
+      [!repeat,         "No repeated characters (aaa, 111)"],
+      [!seq,            "No sequential patterns (abc, 123)"],
+    ];
+
+    document.getElementById('checks').innerHTML = checkList.map(([p, t], i) =>
+      `<div class="chk ${p ? 'pass' : 'fail'}" style="animation-delay:${i * 0.05}s">
+        <span class="chk-icon">${p ? '✅' : '❌'}</span>
+        <span>${t}</span>
+      </div>`
+    ).join('');
+
+    const tips = [];
+    if (pw.length < 8)  tips.push("Make it at least 8 characters long");
+    if (pw.length < 12) tips.push("Aim for 12+ characters for better security");
+    if (!upper)          tips.push("Add uppercase letters (A-Z)");
+    if (!nums)           tips.push("Include numbers (0-9)");
+    if (!syms)           tips.push("Add special characters like !@#$%^&*");
+    if (common)          tips.push("Avoid commonly used passwords — very easy to guess!");
+    if (repeat)          tips.push("Avoid repeating the same character 3+ times");
+    if (seq)             tips.push("Avoid sequential patterns like 'abc' or '123'");
+    if (!tips.length)    tips.push("Excellent password! Store it safely in a password manager 🎉");
+
+    document.getElementById('tipslist').innerHTML = tips.map(t => `<li>${t}</li>`).join('');
+    document.getElementById('tips').style.display = 'block';
+  }
+
+  function reset() {
+    document.getElementById('shield').textContent  = '🔒';
+    document.getElementById('shield').style.filter = '';
+    document.getElementById('slabel').textContent  = '';
+    for (let i = 1; i <= 5; i++) {
+      const f = document.getElementById('b' + i);
+      f.style.width     = '0%';
+      f.style.boxShadow = 'none';
+    }
+    ['slen','supp','snum','ssym'].forEach(id => document.getElementById(id).textContent = '0');
+    document.getElementById('checks').innerHTML =
+      '<div class="empty"><span class="lock">🛡️</span>Type a password above to begin analysis</div>';
+    document.getElementById('tips').style.display = 'none';
+    const inp = document.getElementById('pw');
+    inp.style.borderColor = '#2a2d3e';
+    inp.style.boxShadow   = 'none';
+  }
+</script>
+
+</body>
+</html>
